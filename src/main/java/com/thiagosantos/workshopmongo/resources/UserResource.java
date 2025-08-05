@@ -3,12 +3,15 @@ package com.thiagosantos.workshopmongo.resources;
 import com.thiagosantos.workshopmongo.domain.User;
 import com.thiagosantos.workshopmongo.dto.UserDTO;
 import com.thiagosantos.workshopmongo.repository.UserRepository;
+import com.thiagosantos.workshopmongo.services.UserService;
 import com.thiagosantos.workshopmongo.services.exception.ObjectNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.lang.reflect.Array;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,7 +22,9 @@ import java.util.stream.Collectors;
 public class UserResource {
 
     @Autowired
-    private UserRepository service;
+    private UserService  service;
+
+
 
     @GetMapping
     public ResponseEntity<List<UserDTO>> findAll() {
@@ -30,7 +35,14 @@ public class UserResource {
 
     @GetMapping(value = "/{id}")
     public ResponseEntity<UserDTO> findById(@PathVariable String id) {
-        User obj = service.findById(id).orElseThrow(() -> new ObjectNotFoundException("Objeto não encontrado"));
+        User obj = service.findById(id);
         return ResponseEntity.ok().body(new UserDTO(obj));
+    }
+    @PostMapping
+    public ResponseEntity<Void> insert(@RequestBody UserDTO objDto) {
+        User obj = service.fromDTO(objDto);
+        obj = service.insert(obj);
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(obj.getId()).toUri();
+        return ResponseEntity.created(uri).build();
     }
 }
